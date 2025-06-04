@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+// For exported callback functions (optional - only needed for WASM callbacks)
+#define OCRE_EXPORT(name) __attribute__((export_name(name)))
+
 // OCRE SDK Version Information
 #define OCRE_SDK_VERSION_MAJOR 1
 #define OCRE_SDK_VERSION_MINOR 0
@@ -70,6 +73,19 @@ typedef enum {
     OCRE_GPIO_DIR_INPUT = 0,
     OCRE_GPIO_DIR_OUTPUT = 1
 } ocre_gpio_direction_t;
+
+/**
+ * GPIO configuration structure
+ */
+typedef struct {
+    int pin;                         /**< GPIO pin number (logical) */
+    ocre_gpio_direction_t direction; /**< Pin direction */
+} ocre_gpio_config_t;
+
+/**
+ * GPIO callback function type
+ */
+typedef void (*ocre_gpio_callback_t)(int pin, ocre_gpio_pin_state_t state);
 
 /**
  * Initialize GPIO subsystem
