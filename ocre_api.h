@@ -72,19 +72,6 @@ typedef enum {
 } ocre_gpio_direction_t;
 
 /**
- * GPIO configuration structure
- */
-typedef struct {
-    int pin;                         /**< GPIO pin number (logical) */
-    ocre_gpio_direction_t direction; /**< Pin direction */
-} ocre_gpio_config_t;
-
-/**
- * GPIO callback function type
- */
-typedef void (*ocre_gpio_callback_t)(int pin, ocre_gpio_pin_state_t state);
-
-/**
  * Initialize GPIO subsystem
  * @return 0 on success, negative error code on failure
  */
@@ -92,47 +79,53 @@ int ocre_gpio_init(void);
 
 /**
  * Configure a GPIO pin
- * @param config GPIO pin configuration
+ * @param port GPIO port number
+ * @param pin GPIO pin number
+ * @param direction Pin direction (input/output)
  * @return 0 on success, negative error code on failure
  */
-int ocre_gpio_configure(const ocre_gpio_config_t *config);
+int ocre_gpio_configure(int port, int pin, int direction);
 
 /**
  * Set GPIO pin state
- * @param pin GPIO pin identifier
+ * @param port GPIO port number
+ * @param pin GPIO pin number
  * @param state Desired pin state
  * @return 0 on success, negative error code on failure
  */
-int ocre_gpio_pin_set(int pin, ocre_gpio_pin_state_t state);
+int ocre_gpio_pin_set(int port, int pin, int state);
 
 /**
  * Get GPIO pin state
- * @param pin GPIO pin identifier
+ * @param port GPIO port number
+ * @param pin GPIO pin number
  * @return Pin state or negative error code
  */
-ocre_gpio_pin_state_t ocre_gpio_pin_get(int pin);
+int ocre_gpio_pin_get(int port, int pin);
 
 /**
  * Toggle GPIO pin state
- * @param pin GPIO pin identifier
+ * @param port GPIO port number
+ * @param pin GPIO pin number
  * @return 0 on success, negative error code on failure
  */
-int ocre_gpio_pin_toggle(int pin);
+int ocre_gpio_pin_toggle(int port, int pin);
 
 /**
  * Register callback for GPIO pin state changes
- * @param pin GPIO pin identifier
- * @param callback Callback function
+ * @param port GPIO port number
+ * @param pin GPIO pin number
  * @return 0 on success, negative error code on failure
  */
-int ocre_gpio_register_callback(int pin, ocre_gpio_callback_t callback);
+int ocre_gpio_register_callback(int port, int pin);
 
 /**
  * Unregister GPIO pin callback
- * @param pin GPIO pin identifier
+ * @param port GPIO port number
+ * @param pin GPIO pin number
  * @return 0 on success, negative error code on failure
  */
-int ocre_gpio_unregister_callback(int pin);
+int ocre_gpio_unregister_callback(int port, int pin);
 
 // =============================================================================
 // Timer API
