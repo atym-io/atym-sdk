@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2025 Atym Incorporated. All rights reserved.
+ */
 #ifndef OCRE_SDK_H
 #define OCRE_SDK_H
 
@@ -14,25 +17,25 @@ extern "C"
 #define OCRE_EXPORT(name) __attribute__((export_name(name)))
 
 // OCRE SDK Version Information
-#define OCRE_SDK_VERSION_MAJOR 1
-#define OCRE_SDK_VERSION_MINOR 0
-#define OCRE_SDK_VERSION_PATCH 0
-#define OCRE_SDK_VERSION "1.0.0"
+#define OCRE_SDK_VERSION_MAJOR  1
+#define OCRE_SDK_VERSION_MINOR  0
+#define OCRE_SDK_VERSION_PATCH  0
+#define OCRE_SDK_VERSION        "1.0.0"
 
 // Common Return Codes
-#define OCRE_SUCCESS 0
-#define OCRE_ERROR_INVALID -1
-#define OCRE_ERROR_TIMEOUT -2
-#define OCRE_ERROR_NOT_FOUND -3
-#define OCRE_ERROR_BUSY -4
-#define OCRE_ERROR_NO_MEMORY -5
+#define OCRE_SUCCESS            0
+#define OCRE_ERROR_INVALID      -1
+#define OCRE_ERROR_TIMEOUT      -2
+#define OCRE_ERROR_NOT_FOUN     -3
+#define OCRE_ERROR_BUSY         -4
+#define OCRE_ERROR_NO_MEMORY    -5
 
 // Configuration
-#define OCRE_MAX_TIMERS 16
-#define OCRE_MAX_SENSORS 32
-#define OCRE_MAX_CALLBACKS 64
-#define OCRE_MAX_TOPIC_LEN 128
-#define OCRE_MAX_PAYLOAD_LEN 1024
+#define OCRE_MAX_TIMERS         16
+#define OCRE_MAX_SENSORS        32
+#define OCRE_MAX_CALLBACKS      64
+#define OCRE_MAX_TOPIC_LEN      128
+#define OCRE_MAX_PAYLOAD_LEN    1024
 #define CONFIG_MAX_SENSOR_NAME_LENGTH 125
 
 // GPIO Configuration
@@ -49,8 +52,7 @@ extern "C"
 #endif
 
 // Internal state tracking
-typedef struct
-{
+typedef struct {
     bool initialized;
     uint32_t active_timers;
     uint32_t active_sensors;
@@ -63,8 +65,7 @@ typedef struct
 /**
  * Enum representing different resource types
  */
-typedef enum
-{
+typedef enum {
     OCRE_RESOURCE_TYPE_TIMER,
     OCRE_RESOURCE_TYPE_GPIO,
     OCRE_RESOURCE_TYPE_SENSOR,
@@ -78,8 +79,7 @@ typedef enum
 /**
  * GPIO pin state
  */
-typedef enum
-{
+typedef enum {
     OCRE_GPIO_PIN_RESET = 0,
     OCRE_GPIO_PIN_SET = 1
 } ocre_gpio_pin_state_t;
@@ -87,8 +87,7 @@ typedef enum
 /**
  * GPIO pin direction
  */
-typedef enum
-{
+typedef enum {
     OCRE_GPIO_DIR_INPUT = 0,
     OCRE_GPIO_DIR_OUTPUT = 1
 } ocre_gpio_direction_t;
@@ -96,8 +95,7 @@ typedef enum
 /**
  * GPIO configuration structure
  */
-typedef struct
-{
+typedef struct {
     int pin;                         /**< GPIO pin number (logical) */
     ocre_gpio_direction_t direction; /**< Pin direction */
 } ocre_gpio_config_t;
@@ -240,8 +238,7 @@ typedef int32_t ocre_sensor_handle_t;
 /**
  * Enum representing different sensor channels
  */
-typedef enum
-{
+typedef enum {
     SENSOR_CHANNEL_ACCELERATION,
     SENSOR_CHANNEL_GYRO,
     SENSOR_CHANNEL_MAGNETIC_FIELD,
@@ -256,8 +253,7 @@ typedef enum
 /**
  * Structure representing a sensor instance
  */
-typedef struct ocre_sensor_t
-{
+typedef struct ocre_sensor_t {
     ocre_sensor_handle_t handle;
     char *sensor_name;
     int num_channels;
@@ -348,8 +344,7 @@ int rng_sensor_init(void);
 /**
  * Structure of ocre messages
  */
-typedef struct ocre_msg
-{
+typedef struct ocre_msg {
     uint64_t mid;       /**< message id - increments on each message */
     char *topic;        /**< url of the request */
     char *content_type; /**< payload format (MIME type) */
@@ -387,8 +382,7 @@ int ocre_subscribe_message(char *topic, char *handler_name);
 /**
  * Structure for event data
  */
-typedef struct
-{
+typedef struct {
     int32_t type;  /**< Resource type (e.g., OCRE_RESOURCE_TYPE_*) */
     int32_t id;    /**< Resource ID */
     int32_t port;  /**< Port number (for GPIO) */
