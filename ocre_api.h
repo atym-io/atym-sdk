@@ -217,18 +217,6 @@ int ocre_timer_get_remaining(ocre_timer_t id);
  */
 int ocre_timer_set_callback(const char *callback_name);
 
-/**
- * Timer API
- */
-#ifdef CONFIG_OCRE_TIMER
-        {"ocre_timer_create", ocre_timer_create, "(i)i", NULL},
-        {"ocre_timer_start", ocre_timer_start, "(iii)i", NULL},
-        {"ocre_timer_stop", ocre_timer_stop, "(i)i", NULL},
-        {"ocre_timer_delete", ocre_timer_delete, "(i)i", NULL},
-        {"ocre_timer_get_remaining", ocre_timer_get_remaining, "(i)i", NULL},
-        {"ocre_timer_set_callback", ocre_timer_set_callback, "($)i", NULL},  // ADD THIS LINE
-#endif
-
 // =============================================================================
 // Sleep API
 // =============================================================================
