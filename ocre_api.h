@@ -8,6 +8,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// Forward declarations for WASM types (MOVE THIS HERE)
+struct WASMModuleInstance;
+typedef struct WASMModuleInstance *wasm_module_inst_t;
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -493,10 +497,6 @@ struct _ocre_posix_utsname {
  * @return 0 on success, -1 on failure
  */
 int uname(struct _ocre_posix_utsname *name);
-
-// Forward declarations for WASM types
-struct WASMModuleInstance;
-typedef struct WASMModuleInstance *wasm_module_inst_t;
 
 #ifdef __cplusplus
 }
