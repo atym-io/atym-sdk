@@ -26,7 +26,7 @@ extern "C"
 #define OCRE_SUCCESS            0
 #define OCRE_ERROR_INVALID      -1
 #define OCRE_ERROR_TIMEOUT      -2
-#define OCRE_ERROR_NOT_FOUN     -3
+#define OCRE_ERROR_NOT_FOUND    -3
 #define OCRE_ERROR_BUSY         -4
 #define OCRE_ERROR_NO_MEMORY    -5
 
@@ -37,6 +37,8 @@ extern "C"
 #define OCRE_MAX_TOPIC_LEN      128
 #define OCRE_MAX_PAYLOAD_LEN    1024
 #define CONFIG_MAX_SENSOR_NAME_LENGTH 125
+
+#define OCRE_API_POSIX_BUF_SIZE 65
 
 // GPIO Configuration
 #ifndef CONFIG_OCRE_GPIO_MAX_PINS
@@ -91,14 +93,6 @@ typedef enum {
     OCRE_GPIO_DIR_INPUT = 0,
     OCRE_GPIO_DIR_OUTPUT = 1
 } ocre_gpio_direction_t;
-
-/**
- * GPIO configuration structure
- */
-typedef struct {
-    int pin;                         /**< GPIO pin number (logical) */
-    ocre_gpio_direction_t direction; /**< Pin direction */
-} ocre_gpio_config_t;
 
 /**
  * GPIO callback function type
@@ -212,6 +206,13 @@ int ocre_timer_stop(ocre_timer_t id);
  */
 int ocre_timer_get_remaining(ocre_timer_t id);
 
+/**
+ * Set the timer callback function name for the current module
+ * @param callback_name Name of the callback function to register
+ * @return 0 on success, -1 on error
+ */
+int ocre_timer_set_callback(const char *callback_name);
+
 // =============================================================================
 // Sleep API
 // =============================================================================
@@ -289,18 +290,16 @@ int ocre_sensors_get_handle(int sensor_id);
 /**
  * Get the handle of a sensor by name
  * @param name Name of the sensor
- * @param handle Pointer to store the sensor handle
- * @return OCRE_SUCCESS on success, negative error code on failure
+ * @return Sensor handle on success, negative error code on failure
  */
-int ocre_sensors_get_handle_by_name(const char *name, ocre_sensor_handle_t *handle);
+int ocre_sensors_get_handle_by_name(const char *name);
 
 /**
  * Open a sensor by name
  * @param name Name of the sensor
- * @param handle Pointer to store the sensor handle
  * @return OCRE_SUCCESS on success, negative error code on failure
  */
-int ocre_sensors_open_by_name(const char *name, ocre_sensor_handle_t *handle);
+int ocre_sensors_open_by_name(const char *name);
 
 /**
  * Get the number of channels available in a sensor
@@ -308,6 +307,13 @@ int ocre_sensors_open_by_name(const char *name, ocre_sensor_handle_t *handle);
  * @return Number of channels on success, negative error code on failure
  */
 int ocre_sensors_get_channel_count(int sensor_id);
+
+/**
+ * Get the number of channels for a sensor by name
+ * @param sensor_name Name of the sensor
+ * @return Number of channels on success, negative error code on failure
+ */
+int ocre_sensors_get_channel_count_by_name(const char *sensor_name);
 
 /**
  * Get the type of a specific sensor channel
@@ -318,12 +324,36 @@ int ocre_sensors_get_channel_count(int sensor_id);
 int ocre_sensors_get_channel_type(int sensor_id, int channel_index);
 
 /**
+ * Get the channel type for a sensor by name
+ * @param sensor_name Name of the sensor
+ * @param channel_index Index of the channel
+ * @return Channel type on success, negative error code on failure
+ */
+int ocre_sensors_get_channel_type_by_name(const char *sensor_name, int channel_index);
+
+/**
  * Read data from a sensor channel
  * @param sensor_id ID of the sensor
  * @param channel_type Type of the channel to read
  * @return Sensor value in integer format, negative error code on failure
  */
 int ocre_sensors_read(int sensor_id, int channel_type);
+
+/**
+ * Read data from a sensor channel by name
+ * @param sensor_name Name of the sensor
+ * @param channel_type Type of the channel to read
+ * @return Sensor value on success, negative error code on failure
+ */
+int ocre_sensors_read_by_name(const char *sensor_name, int channel_type);
+
+/**
+ * Get a list of available sensor names
+ * @param name_list Array to store sensor name pointers
+ * @param max_names Maximum number of names to retrieve
+ * @return Number of names retrieved on success, negative error code on failure
+ */
+int ocre_sensors_get_list(char **name_list, int max_names);
 
 // =============================================================================
 // RNG Sensor API
@@ -345,11 +375,11 @@ int rng_sensor_init(void);
  * Structure of ocre messages
  */
 typedef struct ocre_msg {
-    uint64_t mid;       /**< message id - increments on each message */
+    uint32_t mid;       /**< message id - increments on each message */
     char *topic;        /**< url of the request */
     char *content_type; /**< payload format (MIME type) */
     void *payload;      /**< payload of the request */
-    int payload_len;    /**< length in bytes of the payload */
+    uint32_t payload_len;    /**< length in bytes of the payload */
 } ocre_msg_t;
 
 /**
@@ -374,6 +404,18 @@ int ocre_publish_message(char *topic, char *content_type, void *payload, int pay
  * @return 0 on success, negative error code on failure
  */
 int ocre_subscribe_message(char *topic, char *handler_name);
+
+/**
+ * Register a new WASM module instance
+ * @param module_inst WASM module instance to register
+ */
+void ocre_messaging_register_module(wasm_module_inst_t module_inst);
+
+/**
+ * Cleans up all subscriptions associated with a WASM module instance
+ * @param module_inst WASM module instance to clean up
+ */
+void ocre_messaging_cleanup_container(wasm_module_inst_t module_inst);
 
 // =============================================================================
 // Event API
@@ -428,6 +470,33 @@ int ocre_sdk_cleanup(void);
  * @return Version string
  */
 const char *ocre_sdk_get_version(void);
+
+// =============================================================================
+// System Utilities API
+// =============================================================================
+
+/**
+ * Structure for system information
+ */
+struct _ocre_posix_utsname {
+    char sysname[OCRE_API_POSIX_BUF_SIZE];
+    char nodename[OCRE_API_POSIX_BUF_SIZE];
+    char release[OCRE_API_POSIX_BUF_SIZE];
+    char version[OCRE_API_POSIX_BUF_SIZE];
+    char machine[OCRE_API_POSIX_BUF_SIZE];
+    char domainname[OCRE_API_POSIX_BUF_SIZE];
+};
+
+/**
+ * Get system information
+ * @param name Buffer to receive system information
+ * @return 0 on success, -1 on failure
+ */
+int uname(struct _ocre_posix_utsname *name);
+
+// Forward declarations for WASM types
+struct WASMModuleInstance;
+typedef struct WASMModuleInstance *wasm_module_inst_t;
 
 #ifdef __cplusplus
 }
