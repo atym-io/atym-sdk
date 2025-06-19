@@ -209,7 +209,7 @@ void ocre_poll_events(void)
         }
         else if (type == OCRE_RESOURCE_TYPE_GPIO)
         {
-            gpio_callback(id, state);
+            gpio_callback(id, state, port);
         }
         else
         {
