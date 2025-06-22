@@ -1,3 +1,6 @@
+/*
+ * Copyright (C) 2025 Atym Incorporated. All rights reserved.
+ */
 #include "ocre_api.h"
 #include <stdio.h>
 #include <string.h>
