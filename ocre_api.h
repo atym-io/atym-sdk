@@ -21,25 +21,25 @@ extern "C"
 #define OCRE_EXPORT(name) __attribute__((export_name(name)))
 
 // OCRE SDK Version Information
-#define OCRE_SDK_VERSION_MAJOR 1
-#define OCRE_SDK_VERSION_MINOR 0
-#define OCRE_SDK_VERSION_PATCH 0
-#define OCRE_SDK_VERSION "1.0.0"
+#define OCRE_SDK_VERSION_MAJOR  1
+#define OCRE_SDK_VERSION_MINOR  0
+#define OCRE_SDK_VERSION_PATCH  0
+#define OCRE_SDK_VERSION        "1.0.0"
 
 // Common Return Codes
-#define OCRE_SUCCESS 0
-#define OCRE_ERROR_INVALID -1
-#define OCRE_ERROR_TIMEOUT -2
-#define OCRE_ERROR_NOT_FOUND -3
-#define OCRE_ERROR_BUSY -4
-#define OCRE_ERROR_NO_MEMORY -5
+#define OCRE_SUCCESS            0
+#define OCRE_ERROR_INVALID      -1
+#define OCRE_ERROR_TIMEOUT      -2
+#define OCRE_ERROR_NOT_FOUND    -3
+#define OCRE_ERROR_BUSY         -4
+#define OCRE_ERROR_NO_MEMORY    -5
 
 // Configuration
-#define OCRE_MAX_TIMERS 16
-#define OCRE_MAX_SENSORS 32
-#define OCRE_MAX_CALLBACKS 64
-#define OCRE_MAX_TOPIC_LEN 128
-#define OCRE_MAX_PAYLOAD_LEN 1024
+#define OCRE_MAX_TIMERS         16
+#define OCRE_MAX_SENSORS        32
+#define OCRE_MAX_CALLBACKS      64
+#define OCRE_MAX_TOPIC_LEN      128
+#define OCRE_MAX_PAYLOAD_LEN    1024
 #define CONFIG_MAX_SENSOR_NAME_LENGTH 125
 
 #define OCRE_API_POSIX_BUF_SIZE 65
@@ -288,7 +288,7 @@ extern "C"
  * @return OCRE_SUCCESS on success, error code on failure
  */
 #define ocre_pause() ocre_sleep(9999999)
-
+  
     // =============================================================================
     // Sensor API
     // =============================================================================
