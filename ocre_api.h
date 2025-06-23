@@ -16,6 +16,8 @@ typedef struct WASMModuleInstance *wasm_module_inst_t;
 extern "C"
 {
 #endif
+    // For export main function
+    __attribute__((export_name("main"))) int main();
 
 // For exported callback functions (optional - only needed for WASM callbacks)
 #define OCRE_EXPORT(name) __attribute__((export_name(name)))
