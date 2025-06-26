@@ -78,6 +78,13 @@ __attribute__((export_name("poll_events"))) void poll_events(void)
 
 int ocre_register_timer_callback(int timer_id, timer_callback_func_t callback)
 {
+    // Register dispatchers
+    if (ocre_register_dispatcher(OCRE_RESOURCE_TYPE_TIMER, "timer_callback") != 0)
+    {
+        printf("Failed to register timer dispatcher\n");
+        return -1;
+    }
+
     init_callback_system();
 
     if (timer_id < 0 || timer_id >= MAX_CALLBACKS)
@@ -99,6 +106,13 @@ int ocre_register_timer_callback(int timer_id, timer_callback_func_t callback)
 
 int ocre_register_gpio_callback(int pin, int port, gpio_callback_func_t callback)
 {
+    // Register dispatchers
+    if (ocre_register_dispatcher(OCRE_RESOURCE_TYPE_GPIO, "gpio_callback") != 0)
+    {
+        printf("Failed to register GPIO dispatcher\n");
+        return -1;
+    }
+
     init_callback_system();
 
     if (callback == NULL)
