@@ -211,6 +211,57 @@ extern "C"
     int ocre_gpio_unregister_callback(int port, int pin);
 
     // =============================================================================
+    // Messages API
+    // =============================================================================
+
+    /**
+     * Structure of ocre messages
+     */
+    typedef struct ocre_msg
+    {
+        uint32_t mid;         /**< message id - increments on each message */
+        char *topic;          /**< url of the request */
+        char *content_type;   /**< payload format (MIME type) */
+        void *payload;        /**< payload of the request */
+        uint32_t payload_len; /**< length in bytes of the payload */
+    } ocre_msg_t;
+
+    /**
+     * Initialize OCRE Messaging System
+     */
+    void ocre_msg_system_init(void);
+
+    /**
+     * Publish a message to the specified target
+     * @param topic the name of the topic on which to publish the message
+     * @param content_type the content type of the message; it is recommended to use a MIME type
+     * @param payload a buffer containing the message contents
+     * @param payload_len the length of the payload buffer
+     * @return 0 on success, negative error code on failure
+     */
+    int ocre_publish_message(char *topic, char *content_type, void *payload, int payload_len);
+
+    /**
+     * Subscribe to messages on the specified topic
+     * @param topic the name of the topic on which to subscribe
+     * @param handler_name name of callback function that will be called when a message is received on this topic
+     * @return 0 on success, negative error code on failure
+     */
+    int ocre_subscribe_message(char *topic, char *handler_name);
+
+    /**
+     * Register a new WASM module instance
+     * @param module_inst WASM module instance to register
+     */
+    void ocre_messaging_register_module(wasm_module_inst_t module_inst);
+
+    /**
+     * Cleans up all subscriptions associated with a WASM module instance
+     * @param module_inst WASM module instance to clean up
+     */
+    void ocre_messaging_cleanup_container(wasm_module_inst_t module_inst);
+
+    // =============================================================================
     // Event API
     // =============================================================================
 
