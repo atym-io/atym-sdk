@@ -69,7 +69,7 @@ __attribute__((export_name("gpio_callback"))) void gpio_callback(int pin, int st
 
 __attribute__((export_name("poll_events"))) void poll_events(void)
 {
-    ocre_poll_events();
+    ocre_process_events();
 }
 
 // =============================================================================
@@ -181,7 +181,7 @@ int ocre_unregister_gpio_callback(int pin, int port)
     return -1; // Pin/port not found
 }
 
-void ocre_poll_events(void)
+void ocre_process_events(void)
 {
     event_data_t event_data;
     int event_count = 0;
