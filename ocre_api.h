@@ -400,19 +400,40 @@ extern "C"
 
     /**
      * Get the handle of a sensor by name
-     * @param name Name of the sensor
-     * @param handle Pointer to store the sensor handle
+     * @param sensor_name Name of the sensor
      * @return OCRE_SUCCESS on success, negative error code on failure
      */
-    int ocre_sensors_get_handle_by_name(const char *name, ocre_sensor_handle_t *handle);
+    int ocre_sensors_get_handle_by_name(const char *sensor_name);
 
     /**
      * Open a sensor by name
-     * @param name Name of the sensor
-     * @param handle Pointer to store the sensor handle
+     * @param sensor_name Name of the sensor
      * @return OCRE_SUCCESS on success, negative error code on failure
      */
-    int ocre_sensors_open_by_name(const char *name, ocre_sensor_handle_t *handle);
+    int ocre_sensors_open_by_name(const char *sensor_name);
+
+    /** 
+     * Get the channel count of a sensor referenced by name
+     * @param sensor_name Name of the sensor
+     * @return channel count on success, negative error code on failure
+     */
+    int ocre_sensors_get_channel_count_by_name(const char *sensor_name);
+
+    /** 
+     * Get the channel type of a specified channel of a sensor referenced by name
+     * @param sensor_name Name of the sensor
+     * @param channel_index Index of channel to query
+     * @return channel type on success, negative error code on failure
+     */
+    int ocre_sensors_get_channel_type_by_name(const char *sensor_name, ocre_sensor_handle_t channel_index);
+    
+    /** 
+     * Read data from a channel from a sensor referenced by name
+     * @param sensor_name Name of the sensor
+     * @param channel_index Index of channel to query
+     * @return sensor value on success, negative error code on failure
+     */
+    int ocre_sensors_read_by_name(const char *sensor_name, int channel_type);
 
     /**
      * Register a dispatcher for a resource type
@@ -441,6 +462,7 @@ extern "C"
      * @return 0 on success, -1 on failure
      */
     int uname(struct _ocre_posix_utsname *name);
+
 
 #ifdef __cplusplus
 }
