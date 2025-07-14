@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2025 Atym Incorporated. All rights reserved.
  */
-#ifndef OCRE_SDK_H
-#define OCRE_SDK_H
+#ifndef OCRE_API_H
+#define OCRE_API_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stddef.h>
 
-// Forward declarations for WASM types (MOVE THIS HERE)
+// Forward declarations for WASM types
 struct WASMModuleInstance;
 typedef struct WASMModuleInstance *wasm_module_inst_t;
 
@@ -41,429 +41,130 @@ extern "C"
 #define OCRE_MAX_TOPIC_LEN 128
 #define OCRE_MAX_PAYLOAD_LEN 1024
 #define CONFIG_MAX_SENSOR_NAME_LENGTH 125
-
 #define OCRE_API_POSIX_BUF_SIZE 65
 
 // GPIO Configuration
 #ifndef CONFIG_OCRE_GPIO_MAX_PINS
 #define CONFIG_OCRE_GPIO_MAX_PINS 32
 #endif
-
 #ifndef CONFIG_OCRE_GPIO_MAX_PORTS
 #define CONFIG_OCRE_GPIO_MAX_PORTS 8
 #endif
-
 #ifndef CONFIG_OCRE_GPIO_PINS_PER_PORT
 #define CONFIG_OCRE_GPIO_PINS_PER_PORT 16
 #endif
 
-    // Internal state tracking
+    // Structure for event data
     typedef struct
     {
-        bool initialized;
-        uint32_t active_timers;
-        uint32_t active_sensors;
-    } ocre_sdk_state_t;
-
-    /**
-     * Structure for event data
-     */
-    typedef struct
-    {
-        int32_t type;  /**< Resource type (e.g., OCRE_RESOURCE_TYPE_*) */
-        int32_t id;    /**< Resource ID */
-        int32_t port;  /**< Port number (for GPIO) */
-        int32_t state; /**< State (e.g., pin state for GPIO) */
+        int32_t type;                          /**< Resource type (e.g., OCRE_RESOURCE_TYPE_*) */
+        int32_t id;                            /**< Resource ID */
+        uint32_t port;                          /**< Port number (for GPIO) */
+        uint32_t state;                         /**< State (e.g., pin state for GPIO) */
+        uint32_t extra;
+        char topic[OCRE_MAX_TOPIC_LEN];        /**< Message topic (for message events) */
+        char content_type[OCRE_MAX_TOPIC_LEN]; /**< Message content type (for message events) */
+        uint8_t payload[OCRE_MAX_PAYLOAD_LEN]; /**< Message payload (for message events) */
+        uint32_t payload_len;                  /**< Payload length (for message events) */
     } event_data_t;
 
-    // =============================================================================
     // Resource Types
-    // =============================================================================
-
-    /**
-     * Enum representing different resource types
-     */
     typedef enum
     {
         OCRE_RESOURCE_TYPE_TIMER,
         OCRE_RESOURCE_TYPE_GPIO,
         OCRE_RESOURCE_TYPE_SENSOR,
+        OCRE_RESOURCE_TYPE_MESSAGE,
         OCRE_RESOURCE_TYPE_COUNT
     } ocre_resource_type_t;
 
-    // =============================================================================
     // Timer API
-    // =============================================================================
-
-    /**
-     * Create a timer with specified ID
-     * @param id Timer identifier (must be between 1 and MAX_TIMERS)
-     * @return 0 on success, -1 on error
-     */
     int ocre_timer_create(int id);
-
-    /**
-     * Delete a timer
-     * @param id Timer identifier
-     * @return 0 on success, -1 on error
-     */
     int ocre_timer_delete(int id);
-
-    /**
-     * Start a timer
-     * @param id Timer identifier
-     * @param interval Timer interval in milliseconds
-     * @param is_periodic True for periodic timer, false for one-shot
-     * @return 0 on success, -1 on error
-     */
     int ocre_timer_start(int id, int interval, int is_periodic);
-
-    /**
-     * Stop a timer
-     * @param id Timer identifier
-     * @return 0 on success, -1 on error
-     */
     int ocre_timer_stop(int id);
-
-    /**
-     * Get remaining time for a timer
-     * @param id Timer identifier
-     * @return Remaining time in milliseconds, or -1 on error
-     */
     int ocre_timer_get_remaining(int id);
 
-    // =============================================================================
     // GPIO API
-    // =============================================================================
-
-    /**
-     * GPIO pin state
-     */
-    typedef enum
-    {
-        OCRE_GPIO_PIN_RESET = 0,
-        OCRE_GPIO_PIN_SET = 1
-    } ocre_gpio_pin_state_t;
-
-    /**
-     * GPIO pin direction
-     */
     typedef enum
     {
         OCRE_GPIO_DIR_INPUT,
         OCRE_GPIO_DIR_OUTPUT
     } ocre_gpio_direction_t;
 
-    /**
-     * Get GPIO pin state
-     * @param port GPIO port number
-     * @param pin GPIO pin number
-     * @return Pin state or negative error code
-     */
-    ocre_gpio_pin_state_t ocre_gpio_pin_get(int port, int pin);
+    typedef enum
+    {
+        OCRE_GPIO_PIN_RESET = 0,
+        OCRE_GPIO_PIN_SET = 1
+    } ocre_gpio_pin_state_t;
 
-    /**
-     * Initialize GPIO subsystem
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_gpio_init(void);
-
-    /**
-     * Configure a GPIO pin
-     * @param port GPIO port number
-     * @param pin GPIO pin number
-     * @param direction Pin direction (input/output)
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_gpio_configure(int port, int pin, int direction);
-
-    /**
-     * Set GPIO pin state
-     * @param port GPIO port number
-     * @param pin GPIO pin number
-     * @param state Desired pin state
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_gpio_pin_set(int port, int pin, ocre_gpio_pin_state_t state);
-
-    /**
-     * Toggle GPIO pin state
-     * @param port GPIO port number
-     * @param pin GPIO pin number
-     * @return 0 on success, negative error code on failure
-     */
+    ocre_gpio_pin_state_t ocre_gpio_pin_get(int port, int pin);
     int ocre_gpio_pin_toggle(int port, int pin);
-
-    /**
-     * Register callback for GPIO pin state changes
-     * @param port GPIO port number
-     * @param pin GPIO pin number
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_gpio_register_callback(int port, int pin);
-
-    /**
-     * Unregister GPIO pin callback
-     * @param port GPIO port number
-     * @param pin GPIO pin number
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_gpio_unregister_callback(int port, int pin);
 
-    // =============================================================================
-    // Messages API
-    // =============================================================================
-
-    /**
-     * Structure of ocre messages
-     */
-    typedef struct ocre_msg
-    {
-        uint32_t mid;         /**< message id - increments on each message */
-        char *topic;          /**< url of the request */
-        char *content_type;   /**< payload format (MIME type) */
-        void *payload;        /**< payload of the request */
-        uint32_t payload_len; /**< length in bytes of the payload */
-    } ocre_msg_t;
-
-    /**
-     * Initialize OCRE Messaging System
-     */
-    void ocre_msg_system_init(void);
-
-    /**
-     * Publish a message to the specified target
-     * @param topic the name of the topic on which to publish the message
-     * @param content_type the content type of the message; it is recommended to use a MIME type
-     * @param payload a buffer containing the message contents
-     * @param payload_len the length of the payload buffer
-     * @return 0 on success, negative error code on failure
-     */
-    int ocre_publish_message(char *topic, char *content_type, void *payload, int payload_len);
-
-    /**
-     * Subscribe to messages on the specified topic
-     * @param topic the name of the topic on which to subscribe
-     * @param handler_name name of callback function that will be called when a message is received on this topic
-     * @return 0 on success, negative error code on failure
-     */
-    int ocre_subscribe_message(char *topic, char *handler_name);
-
-    /**
-     * Register a new WASM module instance
-     * @param module_inst WASM module instance to register
-     */
-    void ocre_messaging_register_module(wasm_module_inst_t module_inst);
-
-    /**
-     * Cleans up all subscriptions associated with a WASM module instance
-     * @param module_inst WASM module instance to clean up
-     */
-    void ocre_messaging_cleanup_container(wasm_module_inst_t module_inst);
-
-    // =============================================================================
+    int ocre_gpio_configure_by_name(const char *name, int direction);
+    int ocre_gpio_set_by_name(const char *name, int state);
+    int ocre_gpio_get_by_name(const char *name);
+    int ocre_gpio_toggle_by_name(const char *name);
+    int ocre_gpio_register_callback_by_name(const char *name);
+    int ocre_gpio_unregister_callback_by_name(const char *name);
     // Event API
-    // =============================================================================
-
-    /**
-     * Timer callback function type
-     */
     typedef void (*timer_callback_func_t)(void);
-
-    /**
-     * GPIO callback function type
-     */
     typedef void (*gpio_callback_func_t)(void);
+    typedef void (*message_callback_func_t)(const char *topic, const char *content_type, const void *payload, uint32_t payload_len);
 
-    /**
-     * Get event data for a specific resource
-     * @param type_offset Offset for resource type
-     * @param id_offset Offset for resource ID
-     * @param port_offset Offset for port number
-     * @param state_offset Offset for state
-     * @return OCRE_SUCCESS on success, negative error code on failure
-     */
     int ocre_get_event(uint32_t type_offset, uint32_t id_offset, uint32_t port_offset,
-                       uint32_t state_offset);
-
-    /**
-     * Process the events from runtime
-     */
+                       uint32_t state_offset, uint32_t extra_offset, uint32_t payload_len_offset);
     void ocre_process_events(void);
-
-    /**
-     * Unregister GPIO callback
-     * @param pin GPIO pin number
-     * @param port GPIO port number
-     * @return 0 on success, negative error code on failure
-     */
-    int ocre_unregister_gpio_callback(int pin, int port);
-
-    /**
-     * Unregister timer callback
-     * @param timer_id Timer identifier
-     * @return 0 on success, negative error code on failure
-     */
-    int ocre_unregister_timer_callback(int timer_id);
-
-    /**
-     * Register GPIO callback
-     * @param pin GPIO pin number
-     * @param port GPIO port number
-     * @param callback Callback function to register
-     * @return 0 on success, negative error code on failure
-     */
-    int ocre_register_gpio_callback(int pin, int port, gpio_callback_func_t callback);
-
-    /**
-     * Register timer callback
-     * @param timer_id Timer identifier
-     * @param callback Callback function to register
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_register_timer_callback(int timer_id, timer_callback_func_t callback);
+    int ocre_register_gpio_callback(int pin, int port, gpio_callback_func_t callback);
+    int ocre_register_message_callback(const char *topic, message_callback_func_t callback);
+    int ocre_unregister_timer_callback(int timer_id);
+    int ocre_unregister_gpio_callback(int pin, int port);
+    int ocre_unregister_message_callback(const char *topic);
 
-    // =============================================================================
+    // Messaging API
+    // int ocre_msg_system_init(void);
+    int ocre_publish_message(const char *topic, const char *content_type, const void *payload, uint32_t payload_len);
+    int ocre_subscribe_message(const char *topic, const char *handler_name);
+
     // Utility API
-    // =============================================================================
-
-    /**
-     * Sleep for specified duration
-     * @param milliseconds Sleep duration in milliseconds
-     * @return OCRE_SUCCESS on success, error code on failure
-     */
     int ocre_sleep(int milliseconds);
-
-/**
- * Pause execution indefinitely (implementation-specific)
- * @return OCRE_SUCCESS on success, error code on failure
- */
 #define ocre_pause() ocre_sleep(9999999)
 
-    // =============================================================================
     // Sensor API
-    // =============================================================================
-
-    /**
-     * Sensor handle type
-     */
     typedef int ocre_sensor_handle_t;
-
-    /**
-     * Initialize the sensor system
-     * @return 0 on success
-     */
     int ocre_sensors_init(void);
-
-    /**
-     * Discover available sensors
-     * @return Number of discovered sensors, negative error code on failure
-     */
     int ocre_sensors_discover(void);
-
-    /**
-     * Open a sensor for use
-     * @param handle Handle of the sensor to open
-     * @return 0 on success, negative error code on failure
-     */
     int ocre_sensors_open(ocre_sensor_handle_t handle);
-
-    /**
-     * Get the handle of a sensor
-     * @param sensor_id ID of the sensor
-     * @return Sensor handle on success, negative error code on failure
-     */
     int ocre_sensors_get_handle(int sensor_id);
-
-    /**
-     * Get the number of channels available in a sensor
-     * @param sensor_id ID of the sensor
-     * @return Number of channels on success, negative error code on failure
-     */
     int ocre_sensors_get_channel_count(int sensor_id);
-
-    /**
-     * Get the type of a specific sensor channel
-     * @param sensor_id ID of the sensor
-     * @param channel_index Index of the channel
-     * @return Channel type on success, negative error code on failure
-     */
     int ocre_sensors_get_channel_type(int sensor_id, int channel_index);
+    double ocre_sensors_read(int sensor_id, int channel_type);
+    int ocre_sensors_get_handle_by_name(const char *name, ocre_sensor_handle_t handle);
+    int ocre_sensors_open_by_name(const char *name);
 
-    /**
-     * Read data from a sensor channel
-     * @param sensor_id ID of the sensor
-     * @param channel_type Type of the channel to read
-     * @return Sensor value in integer format, negative error code on failure
-     */
-    int ocre_sensors_read(int sensor_id, int channel_type);
-
-    /**
-     * Get the handle of a sensor by name
-     * @param sensor_name Name of the sensor
-     * @return OCRE_SUCCESS on success, negative error code on failure
-     */
-    int ocre_sensors_get_handle_by_name(const char *sensor_name);
-
-    /**
-     * Open a sensor by name
-     * @param sensor_name Name of the sensor
-     * @return OCRE_SUCCESS on success, negative error code on failure
-     */
-    int ocre_sensors_open_by_name(const char *sensor_name);
-
-    /** 
-     * Get the channel count of a sensor referenced by name
-     * @param sensor_name Name of the sensor
-     * @return channel count on success, negative error code on failure
-     */
-    int ocre_sensors_get_channel_count_by_name(const char *sensor_name);
-
-    /** 
-     * Get the channel type of a specified channel of a sensor referenced by name
-     * @param sensor_name Name of the sensor
-     * @param channel_index Index of channel to query
-     * @return channel type on success, negative error code on failure
-     */
-    int ocre_sensors_get_channel_type_by_name(const char *sensor_name, ocre_sensor_handle_t channel_index);
-    
-    /** 
-     * Read data from a channel from a sensor referenced by name
-     * @param sensor_name Name of the sensor
-     * @param channel_index Index of channel to query
-     * @return sensor value on success, negative error code on failure
-     */
-    int ocre_sensors_read_by_name(const char *sensor_name, int channel_type);
-
-    /**
-     * Register a dispatcher for a resource type
-     * @param type Resource type to register the dispatcher for
-     * @param function_name Name of the callback function
-     * @return OCRE_SUCCESS on success, negative error code on failure
-     */
     int ocre_register_dispatcher(ocre_resource_type_t type, const char *function_name);
 
-    /**
-     * Structure for system information
-     */
+    int ocre_sensors_get_channel_count_by_name(const char *name);
+    double ocre_sensors_read_by_name(const char *name, int channel_type);
+    int ocre_sensors_get_channel_type_by_name(char *name, int channel_index);
+
+    // POSIX API
     struct _ocre_posix_utsname
     {
-        char sysname[OCRE_API_POSIX_BUF_SIZE];    /**< System name */
-        char nodename[OCRE_API_POSIX_BUF_SIZE];   /**< Node name */
-        char release[OCRE_API_POSIX_BUF_SIZE];    /**< Release version */
-        char version[OCRE_API_POSIX_BUF_SIZE];    /**< Version string */
-        char machine[OCRE_API_POSIX_BUF_SIZE];    /**< Machine type */
-        char domainname[OCRE_API_POSIX_BUF_SIZE]; /**< Domain name */
+        char sysname[OCRE_API_POSIX_BUF_SIZE];
+        char nodename[OCRE_API_POSIX_BUF_SIZE];
+        char release[OCRE_API_POSIX_BUF_SIZE];
+        char version[OCRE_API_POSIX_BUF_SIZE];
+        char machine[OCRE_API_POSIX_BUF_SIZE];
+        char domainname[OCRE_API_POSIX_BUF_SIZE];
     };
-
-    /**
-     * Get system information
-     * @param name Buffer to receive system information
-     * @return 0 on success, -1 on failure
-     */
     int uname(struct _ocre_posix_utsname *name);
-
-
 #ifdef __cplusplus
 }
 #endif
