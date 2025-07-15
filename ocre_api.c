@@ -68,7 +68,7 @@ void OCRE_EXPORT("gpio_callback") gpio_callback(int pin, int state, int port)
     printf("No GPIO callback registered for pin: %d, port: %d\n", pin, port);
 }
 
-void OCRE_EXPORT("message_callback") message_callback(int message_id, int topic_offset, int content_offset, int payload_offset, int payload_len)
+void OCRE_EXPORT("message_callback") message_callback(uint32_t message_id, uint32_t topic_offset, uint32_t content_offset, uint32_t payload_offset, uint32_t payload_len)
 {
     init_callback_system();
 
@@ -76,7 +76,7 @@ void OCRE_EXPORT("message_callback") message_callback(int message_id, int topic_
     char *topic_ptr = (char *)topic_offset;
     char *content_type_ptr = (char *)content_offset;
     uint8_t *payload_ptr = (uint8_t *)payload_offset;
-    printf("Topic: %s\n", topic_ptr);                   // nothing 
+    printf("Topic: %s\n", topic_ptr);            
     printf("Content-Type: %s\n", content_type_ptr);
     printf("Payload: %s\n", payload_ptr);
 
@@ -97,13 +97,7 @@ void ocre_process_events(void) {
    int event_count = 0;
     const int max_events_per_loop = 5;
 
-    event_data_t event_data;
-    uint32_t extra = 0;
-
-    uint32_t topic_offset = 0;
-    uint32_t content_offset = 0; 
-    uint32_t payload_offset = 0;    
-
+    event_data_t event_data; 
     while (event_count < max_events_per_loop)
     {
         uint32_t payload_len = 0;
@@ -112,14 +106,16 @@ void ocre_process_events(void) {
             (uint32_t)&event_data.id,
             (uint32_t)&event_data.port,
             (uint32_t)&event_data.state,
-            (uint32_t)&extra,
-            (uint32_t)&payload_len);
+            (uint32_t)&event_data.extra,
+            (uint32_t)&event_data.payload_len);
         ocre_sleep(10);
         if (ret != OCRE_SUCCESS)
         {
+            printf("Ocre get event error:%d\n", ret)
             break;
         }
-        printf("Ocre process event retreived: type=%u, id=%u, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%u\n", event_data.type, event_data.id, event_data.port, event_data.state, extra, payload_len);        switch (event_data.type)
+        printf("Ocre process event retreived: type=%u, id=%u, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%u\n", event_data.type, event_data.id, event_data.port, event_data.state, extra, payload_len);        
+        switch (event_data.type)
         {
         case OCRE_RESOURCE_TYPE_TIMER:
             timer_callback(event_data.id);
@@ -128,11 +124,7 @@ void ocre_process_events(void) {
             gpio_callback(event_data.id, event_data.state, event_data.port);
             break;
         case OCRE_RESOURCE_TYPE_MESSAGE:
-                topic_offset = event_data.port;
-                content_offset = event_data.state;
-                payload_offset = extra;
-                
-            message_callback(event_data.id, (int)topic_offset, (int)content_offset, (int)payload_offset, (int)&payload_len);
+            message_callback(event_data.id, event_data.port, event_data.state, event_data.extra, event_data.payload_len);
             break;
         default:
             printf("Unknown event: type=%d, id=%d, port=%d, state=%d\n",
