@@ -14,7 +14,6 @@ static char message_callback_topics[OCRE_MAX_CALLBACKS][OCRE_MAX_TOPIC_LEN] = {{
 static int gpio_callback_pins[OCRE_MAX_CALLBACKS] = {-1};
 static int gpio_callback_ports[OCRE_MAX_CALLBACKS] = {-1};
 
-
 // Initialize callback arrays
 static void init_callback_system(void)
 {
@@ -68,36 +67,39 @@ void OCRE_EXPORT("gpio_callback") gpio_callback(int pin, int state, int port)
     printf("No GPIO callback registered for pin: %d, port: %d\n", pin, port);
 }
 
-void OCRE_EXPORT("message_callback") message_callback(uint32_t message_id, uint32_t topic_offset, uint32_t content_offset, uint32_t payload_offset, uint32_t payload_len)
+void OCRE_EXPORT("message_callback") message_callback(uint32_t message_id, char *topic_ptr, char *content_type_ptr, uint8_t *payload_ptr, uint32_t payload_len)
 {
     init_callback_system();
 
-    uint32_t payload_len_val = *(uint32_t *)payload_len;
-    char *topic_ptr = (char *)topic_offset;
-    char *content_type_ptr = (char *)content_offset;
-    uint8_t *payload_ptr = (uint8_t *)payload_offset;
-    printf("Topic: %s\n", topic_ptr);            
+    printf("Message ID: %d\n", message_id);
+    printf("Topic: %s\n", topic_ptr);
     printf("Content-Type: %s\n", content_type_ptr);
     printf("Payload: %s\n", payload_ptr);
+    printf("Payload len: %d\n", payload_len);
 
-    printf("Message event triggered: topic=%s, content_type=%s, payload_len=%u\n", topic_ptr, content_type_ptr, payload_len_val);
+    printf("Message event triggered: topic=%s, content_type=%s, payload_len=%d\n", topic_ptr, content_type_ptr, payload_len);
     for (int i = 0; i < OCRE_MAX_CALLBACKS; i++)
     {
         if (message_callbacks[i] && strcmp(message_callback_topics[i], topic_ptr) == 0)
         {
             printf("Executing message callback for topic: %s\n", topic_ptr);
-            message_callbacks[i](topic_ptr, content_type_ptr, payload_ptr, payload_len_val);
+            message_callbacks[i](topic_ptr, content_type_ptr, payload_ptr, payload_len);
             return;
         }
     }
     printf("No message callback registered for topic: %s\n", topic_ptr);
 }
 
-void ocre_process_events(void) {
-   int event_count = 0;
+void ocre_process_events(void)
+{
+    int event_count = 0;
     const int max_events_per_loop = 5;
 
-    event_data_t event_data; 
+    char topic_copy[TOPIC_MAX_LEN];
+    char content_type_copy[CONTENT_TYPE_MAX_LEN];
+    uint8_t payload_copy[PAYLOAD_MAX_LEN];
+
+    event_data_t event_data;
     while (event_count < max_events_per_loop)
     {
         uint32_t payload_len = 0;
@@ -111,10 +113,10 @@ void ocre_process_events(void) {
         ocre_sleep(10);
         if (ret != OCRE_SUCCESS)
         {
-            printf("Ocre get event error:%d\n", ret)
+            printf("Ocre get event error:%d\n", ret);
             break;
         }
-        printf("Ocre process event retreived: type=%u, id=%u, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%u\n", event_data.type, event_data.id, event_data.port, event_data.state, extra, payload_len);        
+        printf("Ocre process event retrieved: type=%u, id=%d, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%d\n", event_data.type, event_data.id, event_data.port, event_data.state, event_data.extra, payload_len);
         switch (event_data.type)
         {
         case OCRE_RESOURCE_TYPE_TIMER:
@@ -124,7 +126,24 @@ void ocre_process_events(void) {
             gpio_callback(event_data.id, event_data.state, event_data.port);
             break;
         case OCRE_RESOURCE_TYPE_MESSAGE:
-            message_callback(event_data.id, event_data.port, event_data.state, event_data.extra, event_data.payload_len);
+            // Copy topic
+            strncpy(topic_copy, (const char *)event_data.port, TOPIC_MAX_LEN - 1);
+            topic_copy[TOPIC_MAX_LEN - 1] = '\0';
+
+            // Copy content_type
+            strncpy(content_type_copy, (const char *)event_data.state, CONTENT_TYPE_MAX_LEN - 1);
+            content_type_copy[CONTENT_TYPE_MAX_LEN - 1] = '\0';
+
+            // Copy payload
+            uint32_t len = event_data.payload_len > PAYLOAD_MAX_LEN ? PAYLOAD_MAX_LEN : event_data.payload_len;
+            memcpy(payload_copy, (const uint8_t *)event_data.extra, len);
+
+            if (ocre_messaging_free_module_event_data(event_data.port, event_data.state, event_data.extra) != OCRE_SUCCESS)
+            {
+                printf("Error: Module event data wasn't freed successfully");
+            }
+
+            message_callback(event_data.id, topic_copy, content_type_copy, payload_copy, len);
             break;
         default:
             printf("Unknown event: type=%d, id=%d, port=%d, state=%d\n",
@@ -139,13 +158,13 @@ void ocre_process_events(void) {
     }
 }
 
-
 // =============================================================================
 // PUBLIC API FUNCTIONS
 // =============================================================================
 
-int ocre_register_timer_callback(int timer_id, timer_callback_func_t callback) {
-   init_callback_system();
+int ocre_register_timer_callback(int timer_id, timer_callback_func_t callback)
+{
+    init_callback_system();
     if (timer_id < 0 || timer_id >= OCRE_MAX_CALLBACKS)
     {
         printf("Error: Timer ID %d out of range (0-%d)\n", timer_id, OCRE_MAX_CALLBACKS - 1);
@@ -166,8 +185,9 @@ int ocre_register_timer_callback(int timer_id, timer_callback_func_t callback) {
     return OCRE_SUCCESS;
 }
 
-int ocre_register_gpio_callback(int pin, int port, gpio_callback_func_t callback) {
-      init_callback_system();
+int ocre_register_gpio_callback(int pin, int port, gpio_callback_func_t callback)
+{
+    init_callback_system();
     if (callback == NULL)
     {
         printf("Error: GPIO callback is NULL for pin %d, port %d\n", pin, port);
@@ -208,7 +228,8 @@ int ocre_register_gpio_callback(int pin, int port, gpio_callback_func_t callback
     return ocre_gpio_register_callback(port, pin);
 }
 
-int ocre_register_message_callback(const char *topic, message_callback_func_t callback) {
+int ocre_register_message_callback(const char *topic, message_callback_func_t callback)
+{
     init_callback_system();
     if (!topic || topic[0] == '\0')
     {
@@ -247,14 +268,7 @@ int ocre_register_message_callback(const char *topic, message_callback_func_t ca
     message_callback_topics[slot][OCRE_MAX_TOPIC_LEN - 1] = '\0';
     message_callbacks[slot] = callback;
     printf("Message callback registered for topic: %s (slot %d)\n", topic, slot);
-    int ret = ocre_subscribe_message((char *)topic, "message_callback"); // data about topic and handler_name is tranfered to runtime properly
-    if (ret != OCRE_SUCCESS)
-    {
-        printf("Error: Failed to subscribe to topic %s\n", topic);
-        message_callback_topics[slot][0] = '\0';
-        message_callbacks[slot] = NULL;
-        return ret;
-    }
+
     return OCRE_SUCCESS;
 }
 int ocre_unregister_timer_callback(int timer_id)
