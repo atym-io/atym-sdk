@@ -22,6 +22,8 @@ extern "C"
 {
 #endif
 
+// #define OCRE_SDK_LOG 1
+
 // For exported callback functions (optional - only needed for WASM callbacks)
 #define OCRE_EXPORT(name) __attribute__((export_name(name)))
 
