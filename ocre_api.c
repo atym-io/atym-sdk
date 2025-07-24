@@ -51,7 +51,7 @@ void OCRE_EXPORT("timer_callback") timer_callback(int timer_id)
     {
 #ifdef OCRE_SDK_LOG
         printf("No timer callback registered for ID: %d\n", timer_id);
-#endif        
+#endif
     }
 }
 
@@ -91,7 +91,7 @@ void OCRE_EXPORT("message_callback") message_callback(uint32_t message_id, char 
 #endif
     for (int i = 0; i < OCRE_MAX_CALLBACKS; i++)
     {
-        if (message_callbacks[i] && strcmp(message_callback_topics[i], topic_ptr) == 0)
+        if (message_callbacks[i] && strncmp(message_callback_topics[i], topic_ptr, strlen(message_callback_topics[i])) == 0)
         {
 #ifdef OCRE_SDK_LOG
             printf("Executing message callback for topic: %s\n", topic_ptr);
@@ -128,10 +128,7 @@ void ocre_process_events(void)
         ocre_sleep(10);
         if (ret != OCRE_SUCCESS)
         {
-#ifdef OCRE_SDK_LOG
-            printf("Ocre get event error:%d\n", ret);
-#endif
-            break;
+                break;
         }
 #ifdef OCRE_SDK_LOG
         printf("Ocre process event retrieved: type=%u, id=%d, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%d\n", event_data.type, event_data.id, event_data.port, event_data.state, event_data.extra, payload_len);
@@ -336,7 +333,7 @@ int ocre_unregister_timer_callback(int timer_id)
     {
 #ifdef OCRE_SDK_LOG
         printf("Error: No timer callback registered for ID %d\n", timer_id);
-#endif 
+#endif
         return OCRE_ERROR_NOT_FOUND;
     }
     timer_callbacks[timer_id] = NULL;
