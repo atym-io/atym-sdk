@@ -128,12 +128,6 @@ void ocre_process_events(void)
         ocre_sleep(10);
         if (ret != OCRE_SUCCESS)
         {
-
-#ifdef OCRE_SDK_LOG
-            if (ret != -1)
-                printf("Ocre get event error:%d\n", ret);
-            else
-#endif
                 break;
         }
 #ifdef OCRE_SDK_LOG
