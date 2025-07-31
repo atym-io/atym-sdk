@@ -486,10 +486,9 @@ extern "C"
     /**
      * @brief Get the handle of a sensor by name
      * @param sensor_name Name of the sensor
-     * @param handle Pointer to store the sensor handle
      * @return OCRE_SUCCESS on success, negative error code on failure
      */
-    int ocre_sensors_get_handle_by_name(const char *sensor_name, ocre_sensor_handle_t handle);
+    int ocre_sensors_get_handle_by_name(const char *sensor_name);   //, ocre_sensor_handle_t handle);
 
     /**
      * @brief Open a sensor by name
