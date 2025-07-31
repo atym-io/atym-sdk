@@ -46,6 +46,7 @@ extern "C"
 #define OCRE_MAX_SENSORS 32
 #define OCRE_MAX_CALLBACKS 64
 #define OCRE_MAX_TOPIC_LEN 128
+#define OCRE_MAX_CONTENT_TYPE_LEN 128
 #define OCRE_MAX_PAYLOAD_LEN 1024
 #define CONFIG_MAX_SENSOR_NAME_LENGTH 125
 #define OCRE_API_POSIX_BUF_SIZE 65
@@ -366,10 +367,6 @@ extern "C"
         void *payload;        /**< Payload of the request */
         uint32_t payload_len; /**< Length in bytes of the payload */
     } ocre_msg_t;
-
-#define TOPIC_MAX_LEN 128
-#define CONTENT_TYPE_MAX_LEN 64
-#define PAYLOAD_MAX_LEN 512
 
     /**
      * @brief Initialize OCRE Messaging System
