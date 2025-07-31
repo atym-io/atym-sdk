@@ -110,14 +110,13 @@ void ocre_process_events(void)
     int event_count = 0;
     const int max_events_per_loop = 5;
 
-    char topic_copy[TOPIC_MAX_LEN];
-    char content_type_copy[CONTENT_TYPE_MAX_LEN];
-    uint8_t payload_copy[PAYLOAD_MAX_LEN];
+    char topic_copy[OCRE_MAX_TOPIC_LEN];
+    char content_type_copy[OCRE_MAX_CONTENT_TYPE_LEN];
+    uint8_t payload_copy[OCRE_MAX_PAYLOAD_LEN];
 
     event_data_t event_data;
     while (event_count < max_events_per_loop)
     {
-        uint32_t payload_len = 0;
         int ret = ocre_get_event(
             (uint32_t)&event_data.type,
             (uint32_t)&event_data.id,
@@ -131,7 +130,7 @@ void ocre_process_events(void)
                 break;
         }
 #ifdef OCRE_SDK_LOG
-        printf("Ocre process event retrieved: type=%u, id=%d, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%d\n", event_data.type, event_data.id, event_data.port, event_data.state, event_data.extra, payload_len);
+        printf("Ocre process event retrieved: type=%u, id=%d, port(topic)=%u, state(content)=%u, extra(payload)=%u payload_len=%d\n", event_data.type, event_data.id, event_data.port, event_data.state, event_data.extra, event_data.payload_len);
 #endif
         switch (event_data.type)
         {
@@ -143,15 +142,15 @@ void ocre_process_events(void)
             break;
         case OCRE_RESOURCE_TYPE_MESSAGE:
             // Copy topic
-            strncpy(topic_copy, (const char *)event_data.port, TOPIC_MAX_LEN - 1);
-            topic_copy[TOPIC_MAX_LEN - 1] = '\0';
+            strncpy(topic_copy, (const char *)event_data.port, OCRE_MAX_TOPIC_LEN - 1);
+            topic_copy[OCRE_MAX_TOPIC_LEN - 1] = '\0';
 
             // Copy content_type
-            strncpy(content_type_copy, (const char *)event_data.state, CONTENT_TYPE_MAX_LEN - 1);
-            content_type_copy[CONTENT_TYPE_MAX_LEN - 1] = '\0';
+            strncpy(content_type_copy, (const char *)event_data.state, OCRE_MAX_CONTENT_TYPE_LEN - 1);
+            content_type_copy[OCRE_MAX_CONTENT_TYPE_LEN - 1] = '\0';
 
             // Copy payload
-            uint32_t len = event_data.payload_len > PAYLOAD_MAX_LEN ? PAYLOAD_MAX_LEN : event_data.payload_len;
+            uint32_t len = event_data.payload_len > OCRE_MAX_PAYLOAD_LEN ? OCRE_MAX_PAYLOAD_LEN : event_data.payload_len;
             memcpy(payload_copy, (const uint8_t *)event_data.extra, len);
 
             if (ocre_messaging_free_module_event_data(event_data.port, event_data.state, event_data.extra) != OCRE_SUCCESS)
